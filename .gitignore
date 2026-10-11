@@ -1,0 +1,12 @@
+.gradle/
+build/
+.idea/
+standalone-home/
+*.iml
+*.log
+*.bak
+.env
+.env.*
+credentials.properties
+tokens.json
+hs_err_pid*.log
