@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    maven {
+        url = 'https://repo.runelite.net'
+        content { includeGroupByRegex('net\\.runelite.*') }
+    }
+    mavenCentral()
+}
+
+def runeLiteVersion = '1.13.1'
+
+dependencies {
+    compileOnly "net.runelite:client:$runeLiteVersion"
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation "net.runelite:client:$runeLiteVersion"
+    testRuntimeOnly "net.runelite:jshell:$runeLiteVersion"
+}
+
+group = 'tv.moonga'
+version = '0.1.2'
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(11)
+}
+
+tasks.register('run', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'tv.moonga.npcoverheadhider.NpcOverheadHiderRunner'
+    jvmArgs '-ea'
+    // Local test workaround; standard Plugin Hub builds replace this build file.
+    if (project.hasProperty('localMenuSwapperWorkaround')) {
+        jvmArgs '-da:net.runelite.client.plugins.menuentryswapper.MenuEntrySwapperPlugin'
+    }
+    args '--developer-mode', '--debug'
+
+    def standaloneHome = layout.projectDirectory.dir('standalone-home').asFile
+    def useJagex = project.hasProperty('jagex')
+    systemProperty 'user.home', useJagex ? System.getProperty('user.home') : standaloneHome.absolutePath
+    if (!useJagex) {
+        doFirst { standaloneHome.mkdirs() }
+    }
+    ['JX_ACCESS_TOKEN', 'JX_REFRESH_TOKEN', 'JX_SESSION_ID', 'JX_CHARACTER_ID', 'JX_DISPLAY_NAME'].each {
+        environment.remove(it)
+    }
+}
